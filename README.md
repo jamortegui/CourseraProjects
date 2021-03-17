@@ -1,2 +1,2 @@
 # CourseraProjects
-Code from completed coursera guided projects
+Code from completed coursera guided projects and courses
