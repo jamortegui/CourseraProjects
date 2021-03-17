@@ -6,6 +6,8 @@ output:
     highlight: pygments
     theme: spacelab
 ---
+# Inferential Statistics Final Project
+https://www.coursera.org/account/accomplishments/verify/ZG4TK79PFXPJ
 
 ## Setup
 
