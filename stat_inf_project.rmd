@@ -1,0 +1,103 @@
+---
+title: "Statistical inference with the GSS data"
+output: 
+  html_document: 
+    fig_height: 4
+    highlight: pygments
+    theme: spacelab
+---
+
+## Setup
+
+### Load packages
+
+```{r load-packages, message = FALSE}
+library(ggplot2)
+library(dplyr)
+library(statsr)
+```
+
+### Load data
+
+Make sure your data and R Markdown files are in the same directory. When loaded
+your data file will be called `gss`. Delete this note when before you submit 
+your work. 
+
+```{r load-data}
+load("gss.Rdata")
+```
+
+
+
+* * *
+
+## Part 1: Data
+From the data, it can be seen in the description that it was collected from a random sample of the north american population between the years 1972 and 2012. This means that the relationships that will be found in the analysis can be said to hold true only for that population. Also, it can be seen that not random assignment was conducted, which means it is not possible to establish causality relationships from the data set.
+
+* * *
+
+## Part 2: Research question
+
+*Is there a relationship between sex and the fear to walk around in the neighborhood at night?*
+
+Personally i found this question interesting because I want to see how the capacity to feel save in your own neighborhood at night is related to sex for this population since I believe safety feeling is directly connected to live style and well being. 
+
+* * *
+
+## Part 3: Exploratory data analysis
+```{r}
+fear <- gss %>% select(sex,fear) %>% filter(!is.na(fear))
+numMaleFear <- nrow(fear %>% filter(sex == "Male" & fear == "Yes"))
+numMaleNotFear <- nrow(fear %>% filter(sex == "Male" & fear == "No"))
+numFemaleFear <- nrow(fear %>% filter(sex == "Female" & fear == "Yes"))
+numFemaleNotFear <- nrow(fear %>% filter(sex == "Female" & fear == "No"))
+totMaleF <- numMaleFear+numMaleNotFear
+totFemaleF <- numFemaleFear+numFemaleNotFear
+
+#Plot
+fearSex <- c(numFemaleFear/totFemaleF,numFemaleNotFear/totFemaleF,numMaleFear/totMaleF,numMaleNotFear/totMaleF)*100
+fearSexArgs <- c("Females:fear","Females:not","Males:fear","Males:not")
+barplot(fearSex,main="% of sex who fear and not fear",names.arg=fearSexArgs,ylim=c(0,100),ylab="%")
+
+print(sprintf("# of females who fear: %s > 10",numFemaleFear))
+print(sprintf("# of males who fear: %s > 10",numMaleFear))
+print(sprintf("# of females who do not fear: %s > 10",numFemaleNotFear))
+print(sprintf("# of males who do not fear: %s > 10",numMaleNotFear))
+
+```
+From the graph it can be observed that for this sample % of females who fear walk around in the neighborhood at night is bigger that the % of males who fear the same situation. 
+
+From the console output, it can be observed that for each group we have more than 10 "positive" and "negative" cases, which alongside with the independence of the groups give allowance to use the CLT for hypothesis testing. 
+
+* * *
+
+## Part 4: Inference
+
+Hypothesis:
+  $h_0$ -> $P_{male}-P_{female}=0$
+  $h_a$ -> $P_{male}-P_{female}\neq0$
+  
+####Confidence interval:
+```{r}
+p1 <- numMaleFear/totMaleF
+p2 <- numFemaleFear/totFemaleF
+nullValue <- p1-p2
+SE <- sqrt(((p1*(1-p1))/totMaleF)+((p2*(1-p2))/totFemaleF))
+ME <- 1.96*SE
+upperLimit=nullValue+ME
+downLimit = nullValue-ME
+print(sprintf("Confidence interval (%s,%s)",downLimit,upperLimit))
+
+```
+*Conclusion*:From a confidence interval of 95% it can be seen that the null value (0) is not inside. This means that there is strong evidence that the proportion difference did not happened just by chance and the the null hypothesis have to be rejected. This means that for the mentioned population there is actually a difference between the proportion of females who are afraid of walk at night at their neighborhood and the proportion of males who fear the same situation, being the females the ones who fear this situation the most.
+
+####Hypotesis test:
+```{r}
+nullValue <- 0
+Ppool <- (numFemaleFear+numMaleFear)/(totFemaleF+totMaleF)
+SE = sqrt(((Ppool*(1-Ppool))/totMaleF)+((Ppool*(1-Ppool))/totFemaleF))
+Z = ((p1-p2)-nullValue)/SE
+print(sprintf("Z statistics = %s",Z))
+print(sprintf("P value for this Z statistics is close to 0"))
+```
+*Conclusion*:Given that the P value is really close to 0, the null hypothesis must be rejected. This is coincident with the conclusion given by the confidence interval.
